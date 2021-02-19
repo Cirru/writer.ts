@@ -1,0 +1,18 @@
+{
+  "name": "@cirru/writer.ts",
+  "version": "0.1.0-a1",
+  "description": "Cirru Writer in TS",
+  "main": "lib/writer.js",
+  "author": "Cirru",
+  "license": "MIT",
+  "scripts": {
+    "compile": "tsc --outDir lib/",
+    "test": "ts-node tests/test-writer.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.30",
+    "prettier": "^2.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
+  }
+}
