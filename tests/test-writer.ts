@@ -1,7 +1,6 @@
 import * as fs from "fs";
 
-import { CirruWriterNode, writeCirruCode } from "../src/writer";
-import { toWriterList } from "../src/from-json";
+import { writeCirruCode } from "../src/writer";
 
 let caseNames = [
   "demo",
@@ -24,15 +23,15 @@ let caseNames = [
 
 let inlineCaseNames = ["html-inline", "inline-mode"];
 
-console.log("can add");
+console.log("try writer");
 
-let data = toWriterList([["a", "b", ["c", ["c1", "c5", ["c3", "c4"]]], "d"]]);
+// let data = [["a", "b", ["c", ["c1", "c5", ["c3", "c4"]]], "d"]];
 // echo writeCirruCode(data)
 
 for (let name of caseNames) {
   let content = fs.readFileSync("tests/ast/" + name + ".json", "utf8");
   let v = JSON.parse(content);
-  let xs = toWriterList(v);
+  let xs = v;
   let target = fs.readFileSync("tests/cirru/" + name + ".cirru", "utf8");
 
   console.log("checking: ", name);
@@ -49,7 +48,7 @@ for (let name of caseNames) {
 for (let name of inlineCaseNames) {
   let content = fs.readFileSync("tests/ast/" + name + ".json", "utf8");
   let v = JSON.parse(content);
-  let xs = toWriterList(v);
+  let xs = v;
   let target = fs.readFileSync("tests/cirru/" + name + ".cirru", "utf8");
 
   console.log("checking inline: ", name);

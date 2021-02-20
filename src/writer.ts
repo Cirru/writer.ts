@@ -1,15 +1,14 @@
-import { CirruWriterNode, toString, CirruWriterNodeKind, WriterNodeKind, isSimpleExpr } from "./types";
-import { toWriterList } from "./from-json";
+import { CirruWriterNode, WriterNodeKind, isSimpleExpr } from "./types";
 import { isADigit, isALetter } from "./str-util";
 
-export { toWriterList, toString, CirruWriterNode, CirruWriterNodeKind };
+export { CirruWriterNode };
 
 let allowedChars = "-~_@#$&%!?^*=+|\\/<>[]{}.,:;'";
 
 function isBoxed(xs: CirruWriterNode): boolean {
-  if (xs.kind === CirruWriterNodeKind.writerList) {
-    for (let x of xs.list) {
-      if (x.kind === CirruWriterNodeKind.writerItem) {
+  if (Array.isArray(xs)) {
+    for (let x of xs) {
+      if (typeof x === "string") {
         return false;
       }
     }
@@ -38,24 +37,24 @@ let charOpen = "(";
 let charSpace = " ";
 
 function generateLeaf(xs: CirruWriterNode): string {
-  if (xs.kind === CirruWriterNodeKind.writerList) {
-    if (xs.list.length === 0) {
+  if (Array.isArray(xs)) {
+    if (xs.length === 0) {
       return "()";
     } else {
       throw new Error("Unexpect list in leaf");
     }
   } else {
     let allAllowed = true;
-    for (let x of xs.item) {
+    for (let x of xs) {
       if (!isCharAllowed(x)) {
         allAllowed = false;
         break;
       }
     }
     if (allAllowed) {
-      return xs.item;
+      return xs;
     } else {
-      return JSON.stringify(xs.item);
+      return JSON.stringify(xs);
     }
   }
 }
@@ -63,13 +62,13 @@ function generateLeaf(xs: CirruWriterNode): string {
 function generateInlineExpr(xs: CirruWriterNode): string {
   let result = charOpen;
 
-  if (xs.kind === CirruWriterNodeKind.writerList) {
-    for (let idx = 0; idx < xs.list.length; idx++) {
-      let x = xs.list[idx];
+  if (Array.isArray(xs)) {
+    for (let idx = 0; idx < xs.length; idx++) {
+      let x = xs[idx];
       if (idx > 0) {
         result = result + charSpace;
       }
-      let childForm = x.kind === CirruWriterNodeKind.writerItem ? generateLeaf(x) : generateInlineExpr(x);
+      let childForm = typeof x === "string" ? generateLeaf(x) : generateInlineExpr(x);
       result = result + childForm;
     }
   } else {
@@ -94,10 +93,10 @@ function renderNewline(n: number): string {
 type WriterTreeOptions = { useInline: boolean };
 
 function getNodeKind(cursor: CirruWriterNode): WriterNodeKind {
-  if (cursor.kind === CirruWriterNodeKind.writerItem) {
+  if (typeof cursor === "string") {
     return WriterNodeKind.writerKindLeaf;
   } else {
-    if (cursor.list.length === 0) {
+    if (cursor.length === 0) {
       return WriterNodeKind.writerKindLeaf;
     } else if (isSimpleExpr(cursor)) {
       return WriterNodeKind.writerKindSimpleExpr;
@@ -120,12 +119,12 @@ function generateTree(
   let bended = false;
   let result = "";
 
-  if (xs.kind === CirruWriterNodeKind.writerItem) {
+  if (typeof xs === "string") {
     throw new Error("expects a list");
   }
 
-  for (let idx = 0; idx < xs.list.length; idx++) {
-    let cursor = xs.list[idx];
+  for (let idx = 0; idx < xs.length; idx++) {
+    let cursor = xs[idx];
     let kind = getNodeKind(cursor);
     let nextLevel = level + 1;
     let childInsistHead = prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr;
@@ -133,8 +132,8 @@ function generateTree(
       idx != 0 &&
       !inTail &&
       prevKind === WriterNodeKind.writerKindLeaf &&
-      idx === xs.list.length - 1 &&
-      cursor.kind === CirruWriterNodeKind.writerList;
+      idx === xs.length - 1 &&
+      Array.isArray(cursor);
 
     // console.log("\nloop", prevKind, kind);
     // console.log("cursor", cursor);
@@ -143,10 +142,10 @@ function generateTree(
     let child: string; // mutable
 
     if (atTail) {
-      if (cursor.kind === CirruWriterNodeKind.writerItem) {
+      if (typeof cursor === "string") {
         throw new Error("Expected list");
       }
-      if (cursor.list.length === 0) {
+      if (cursor.length === 0) {
         child = "$";
       } else {
         child = "$ " + generateTree(cursor, false, options, bended ? nextLevel : level, atTail);
@@ -235,10 +234,10 @@ function generateTree(
 }
 
 function generateStatements(xs: CirruWriterNode, options: WriterTreeOptions): string {
-  if (xs.kind === CirruWriterNodeKind.writerItem) {
+  if (typeof xs === "string") {
     throw new Error("Unexpected item");
   }
-  return xs.list
+  return xs
     .map((x: CirruWriterNode): string => {
       return "\n" + generateTree(x, true, options, 0, false) + "\n";
     })
