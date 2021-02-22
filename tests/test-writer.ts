@@ -19,6 +19,7 @@ let caseNames = [
   "unfolding",
   "append-indent",
   "cond",
+  "cond-short",
 ];
 
 let inlineCaseNames = ["html-inline", "inline-mode"];
