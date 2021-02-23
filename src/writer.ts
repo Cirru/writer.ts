@@ -163,7 +163,12 @@ function generateTree(
         child = renderNewline(nextLevel) + generateTree(cursor, childInsistHead, options, nextLevel, false);
       }
     } else if (kind === WriterNodeKind.writerKindExpr) {
-      child = renderNewline(nextLevel) + generateTree(cursor, childInsistHead, options, nextLevel, false);
+      let content = generateTree(cursor, childInsistHead, options, nextLevel, false)
+      if (content.startsWith("\n")) {
+        child = content
+      } else {
+        child = renderNewline(nextLevel) + content;
+      }
     } else if (kind === WriterNodeKind.writerKindBoxedExpr) {
       let content = generateTree(cursor, childInsistHead, options, nextLevel, false);
       if (

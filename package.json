@@ -1,6 +1,6 @@
 {
   "name": "@cirru/writer.ts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cirru Writer in TS",
   "main": "lib/writer.js",
   "author": "Cirru",
