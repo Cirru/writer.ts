@@ -1,12 +1,12 @@
 {
   "name": "@cirru/writer.ts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Cirru Writer in TS",
   "main": "lib/writer.js",
   "author": "Cirru",
   "license": "MIT",
   "scripts": {
-    "compile": "tsc --outDir lib/",
+    "compile": "tsc -d --outDir lib/",
     "test": "ts-node tests/test-writer.ts"
   },
   "devDependencies": {
