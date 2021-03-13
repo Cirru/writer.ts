@@ -112,11 +112,12 @@ function generateTree(
   xs: CirruWriterNode,
   insistHead: boolean,
   options: WriterTreeOptions,
-  level: number,
+  baseLevel: number,
   inTail: boolean
 ): string {
   let prevKind = WriterNodeKind.writerKindNil;
-  let bended = false;
+  let bendedSize = 0;
+  let level = baseLevel;
   let result = "";
 
   if (typeof xs === "string") {
@@ -148,7 +149,7 @@ function generateTree(
       if (cursor.length === 0) {
         child = "$";
       } else {
-        child = "$ " + generateTree(cursor, false, options, bended ? nextLevel : level, atTail);
+        child = "$ " + generateTree(cursor, false, options, level, atTail);
       }
     } else if (kind === WriterNodeKind.writerKindLeaf) {
       child = generateLeaf(cursor);
@@ -163,9 +164,9 @@ function generateTree(
         child = renderNewline(nextLevel) + generateTree(cursor, childInsistHead, options, nextLevel, false);
       }
     } else if (kind === WriterNodeKind.writerKindExpr) {
-      let content = generateTree(cursor, childInsistHead, options, nextLevel, false)
+      let content = generateTree(cursor, childInsistHead, options, nextLevel, false);
       if (content.startsWith("\n")) {
-        child = content
+        child = content;
       } else {
         child = renderNewline(nextLevel) + content;
       }
@@ -184,6 +185,10 @@ function generateTree(
       throw new Error("Unpected condition");
     }
 
+    let bended =
+      kind === WriterNodeKind.writerKindLeaf &&
+      (prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr);
+
     let chunk: string; // mutable
     if (atTail) {
       chunk = " " + child;
@@ -193,10 +198,7 @@ function generateTree(
       chunk = " " + child;
     } else if (prevKind === WriterNodeKind.writerKindSimpleExpr && kind === WriterNodeKind.writerKindLeaf) {
       chunk = " " + child;
-    } else if (
-      kind === WriterNodeKind.writerKindLeaf &&
-      (prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr)
-    ) {
+    } else if (bended) {
       chunk = renderNewline(nextLevel) + ", " + child;
     } else {
       chunk = child;
@@ -226,10 +228,9 @@ function generateTree(
       prevKind = kind;
     }
 
-    if (!bended) {
-      if (kind === WriterNodeKind.writerKindExpr || kind === WriterNodeKind.writerKindBoxedExpr) {
-        bended = true;
-      }
+    if (bended) {
+      bendedSize = bendedSize + 1;
+      level = level + 1;
     }
 
     // console.log("chunk", JSON.stringify(chunk));
