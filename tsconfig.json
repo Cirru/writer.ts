@@ -12,7 +12,7 @@
     "jsx": "react",
     "lib": ["es2016", "dom"],
     "types": ["node"],
-    "importsNotUsedAsValues": "preserve"
+    "verbatimModuleSyntax": false
   },
   "include": ["src/"]
 }
