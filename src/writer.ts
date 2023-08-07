@@ -72,7 +72,7 @@ function generateInlineExpr(xs: CirruWriterNode): string {
       result = result + childForm;
     }
   } else {
-    throw new Error("Unexpect token in gen list");
+    throw new Error(`Unexpect token in gen list: ${xs}`);
   }
 
   return result + charClose;
@@ -142,7 +142,9 @@ function generateTree(
 
     let child: string; // mutable
 
-    if (atTail) {
+    if (typeof cursor === "string") {
+      child = generateLeaf(cursor);
+    } else if (atTail) {
       if (typeof cursor === "string") {
         throw new Error("Expected list");
       }
@@ -151,10 +153,14 @@ function generateTree(
       } else {
         child = "$ " + generateTree(cursor, false, options, level, atTail);
       }
-    } else if (kind === WriterNodeKind.writerKindLeaf) {
-      child = generateLeaf(cursor);
     } else if (idx === 0 && insistHead) {
       child = generateInlineExpr(cursor);
+    } else if (kind === WriterNodeKind.writerKindLeaf) {
+      if (idx === 0) {
+        child = renderNewline(level) + generateLeaf(cursor);
+      } else {
+        child = generateLeaf(cursor);
+      }
     } else if (kind === WriterNodeKind.writerKindSimpleExpr) {
       if (prevKind === WriterNodeKind.writerKindLeaf) {
         child = generateInlineExpr(cursor);
