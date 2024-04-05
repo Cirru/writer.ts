@@ -7,7 +7,8 @@ let allowedChars = "-~_@#$&%!?^*=+|\\/<>[]{}.,:;'";
 
 function isBoxed(xs: CirruWriterNode): boolean {
   if (Array.isArray(xs)) {
-    for (let x of xs) {
+    for (let idx = 0; idx < xs.length; idx++) {
+      let x = xs[idx];
       if (typeof x === "string") {
         return false;
       }
@@ -19,7 +20,7 @@ function isBoxed(xs: CirruWriterNode): boolean {
 }
 
 function isSimpleChar(x: string): boolean {
-  return isADigit(x) || isALetter(x);
+  return isALetter(x) || isADigit(x);
 }
 
 function isCharAllowed(x: string): boolean {
@@ -45,7 +46,8 @@ function generateLeaf(xs: CirruWriterNode): string {
     }
   } else {
     let allAllowed = true;
-    for (let x of xs) {
+    for (let idx = 0; idx < xs.length; idx++) {
+      let x = xs[idx];
       if (!isCharAllowed(x)) {
         allAllowed = false;
         break;
@@ -66,10 +68,10 @@ function generateInlineExpr(xs: CirruWriterNode): string {
     for (let idx = 0; idx < xs.length; idx++) {
       let x = xs[idx];
       if (idx > 0) {
-        result = result + charSpace;
+        result += charSpace;
       }
       let childForm = typeof x === "string" ? generateLeaf(x) : generateInlineExpr(x);
-      result = result + childForm;
+      result += childForm;
     }
   } else {
     throw new Error(`Unexpect token in gen list: ${xs}`);
@@ -81,7 +83,7 @@ function generateInlineExpr(xs: CirruWriterNode): string {
 function renderSpaces(n: number): string {
   let result = "";
   for (let i = 0; i < n; i++) {
-    result = result + "  ";
+    result += "  ";
   }
   return result;
 }
@@ -140,41 +142,46 @@ function generateTree(
     // console.log("cursor", cursor);
     // console.log(JSON.stringify(result));
 
-    let child: string; // mutable
+    let child: string = ""; // mutable
 
     if (typeof cursor === "string") {
-      child = generateLeaf(cursor);
+      child += generateLeaf(cursor);
     } else if (atTail) {
       if (typeof cursor === "string") {
         throw new Error("Expected list");
       }
       if (cursor.length === 0) {
-        child = "$";
+        child += "$";
       } else {
-        child = "$ " + generateTree(cursor, false, options, level, atTail);
+        child += "$ ";
+        child += generateTree(cursor, false, options, level, atTail);
       }
     } else if (idx === 0 && insistHead) {
-      child = generateInlineExpr(cursor);
+      child += generateInlineExpr(cursor);
     } else if (kind === WriterNodeKind.writerKindLeaf) {
       if (idx === 0) {
-        child = renderNewline(level) + generateLeaf(cursor);
+        child += renderNewline(level);
+        child += generateLeaf(cursor);
       } else {
-        child = generateLeaf(cursor);
+        child += generateLeaf(cursor);
       }
     } else if (kind === WriterNodeKind.writerKindSimpleExpr) {
       if (prevKind === WriterNodeKind.writerKindLeaf) {
-        child = generateInlineExpr(cursor);
+        child += generateInlineExpr(cursor);
       } else if (options.useInline && prevKind === WriterNodeKind.writerKindSimpleExpr) {
-        child = " " + generateInlineExpr(cursor);
+        child += " ";
+        child += generateInlineExpr(cursor);
       } else {
-        child = renderNewline(nextLevel) + generateTree(cursor, childInsistHead, options, nextLevel, false);
+        child += renderNewline(nextLevel);
+        child += generateTree(cursor, childInsistHead, options, nextLevel, false);
       }
     } else if (kind === WriterNodeKind.writerKindExpr) {
       let content = generateTree(cursor, childInsistHead, options, nextLevel, false);
       if (content.startsWith("\n")) {
-        child = content;
+        child += content;
       } else {
-        child = renderNewline(nextLevel) + content;
+        child += renderNewline(nextLevel);
+        child += content;
       }
     } else if (kind === WriterNodeKind.writerKindBoxedExpr) {
       let content = generateTree(cursor, childInsistHead, options, nextLevel, false);
@@ -183,34 +190,38 @@ function generateTree(
         prevKind === WriterNodeKind.writerKindLeaf ||
         prevKind === WriterNodeKind.writerKindSimpleExpr
       ) {
-        child = content;
+        child += content;
       } else {
-        child = renderNewline(nextLevel) + content;
+        child += renderNewline(nextLevel);
+        child += content;
       }
     } else {
-      throw new Error("Unpected condition");
+      throw new Error("Unexpected condition");
     }
 
     let bended =
       kind === WriterNodeKind.writerKindLeaf &&
       (prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr);
 
-    let chunk: string; // mutable
     if (atTail) {
-      chunk = " " + child;
+      result += " ";
+      result += child;
     } else if (prevKind === WriterNodeKind.writerKindLeaf && kind === WriterNodeKind.writerKindLeaf) {
-      chunk = " " + child;
+      result += " ";
+      result += child;
     } else if (prevKind === WriterNodeKind.writerKindLeaf && kind === WriterNodeKind.writerKindSimpleExpr) {
-      chunk = " " + child;
+      result += " ";
+      result += child;
     } else if (prevKind === WriterNodeKind.writerKindSimpleExpr && kind === WriterNodeKind.writerKindLeaf) {
-      chunk = " " + child;
+      result += " ";
+      result += child;
     } else if (bended) {
-      chunk = renderNewline(nextLevel) + ", " + child;
+      result += renderNewline(nextLevel);
+      result += ", ";
+      result += child;
     } else {
-      chunk = child;
+      result += child;
     }
-
-    result = result + chunk;
 
     // update writer states
 
@@ -235,8 +246,8 @@ function generateTree(
     }
 
     if (bended) {
-      bendedSize = bendedSize + 1;
-      level = level + 1;
+      bendedSize += 1;
+      level += 1;
     }
 
     // console.log("chunk", JSON.stringify(chunk));

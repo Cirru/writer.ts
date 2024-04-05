@@ -1,6 +1,6 @@
 {
   "name": "@cirru/writer.ts",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Cirru Writer in TS",
   "main": "lib/writer.js",
   "author": "Cirru",
@@ -10,8 +10,8 @@
     "test": "ts-node tests/test-writer.ts"
   },
   "devDependencies": {
-    "@types/node": "^20.4.6",
-    "prettier": "^3.0.0",
+    "@types/node": "^20.5.1",
+    "prettier": "^3.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   }
