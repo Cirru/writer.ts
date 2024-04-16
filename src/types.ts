@@ -9,7 +9,8 @@ export enum WriterNodeKind {
 
 export function isSimpleExpr(xs: CirruWriterNode): boolean {
   if (Array.isArray(xs)) {
-    for (let x of xs) {
+    for (let idx = 0; idx < xs.length; idx++) {
+      let x = xs[idx];
       if (typeof x !== "string") {
         return false;
       }
