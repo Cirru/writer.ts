@@ -1,10 +1,14 @@
 {
   "name": "@cirru/writer.ts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Cirru Writer in TS",
   "main": "lib/writer.js",
   "author": "Cirru",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cirru/writer.ts.git"
+  },
   "scripts": {
     "compile": "tsc -d --outDir lib/",
     "test": "ts-node tests/test-writer.ts"
