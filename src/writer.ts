@@ -267,6 +267,37 @@ function generateStatements(xs: CirruWriterNode, options: WriterTreeOptions): st
     .join("");
 }
 
-export function writeCirruCode(xs: CirruWriterNode, options: WriterTreeOptions = { useInline: false }): string {
+export function writeCirruCode(xs: CirruWriterNode[], options: WriterTreeOptions = { useInline: false }): string {
   return generateStatements(xs, options);
+}
+
+export function writeCirruOneLiner(xs: CirruWriterNode): string {
+  if (typeof xs === "string") {
+    throw new Error("writeCirruOneLiner expects an expression (array), not a leaf (string)");
+  } else if (Array.isArray(xs)) {
+    let result = "";
+    for (let idx = 0; idx < xs.length; idx++) {
+      let x = xs[idx];
+      let isLastItem = idx === xs.length - 1;
+      let atTail = idx > 0 && isLastItem && Array.isArray(x);
+
+      if (idx > 0) {
+        result += charSpace;
+      }
+
+      if (atTail) {
+        result += "$";
+        if (x.length > 0) {
+          result += charSpace;
+          result += writeCirruOneLiner(x);
+        }
+      } else {
+        let childForm = typeof x === "string" ? generateLeaf(x) : generateInlineExpr(x);
+        result += childForm;
+      }
+    }
+    return result;
+  } else {
+    throw new Error("Unexpected node type");
+  }
 }
