@@ -110,16 +110,6 @@ function getNodeKind(cursor: CirruWriterNode): WriterNodeKind {
   }
 }
 
-function shouldInsistNestedHead(ys: CirruWriterNode[], idx: number, prevKind: WriterNodeKind): boolean {
-  if (prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr) {
-    return true;
-  }
-  if (idx > 1 && Array.isArray(ys[0]) && (ys[0] as CirruWriterNode[]).length > 1) {
-    return true;
-  }
-  return false;
-}
-
 function generateTree(
   xs: CirruWriterNode,
   insistHead: boolean,
@@ -140,7 +130,7 @@ function generateTree(
     let cursor = xs[idx];
     let kind = getNodeKind(cursor);
     let nextLevel = level + 1;
-    let childInsistHead = Array.isArray(cursor) ? shouldInsistNestedHead(cursor as CirruWriterNode[], idx, prevKind) : false;
+    let childInsistHead = prevKind === WriterNodeKind.writerKindBoxedExpr || prevKind === WriterNodeKind.writerKindExpr || idx > 1;
     let atTail =
       idx != 0 &&
       !inTail &&
@@ -163,8 +153,14 @@ function generateTree(
       if (cursor.length === 0) {
         child += "$";
       } else {
-        child += "$ ";
-        child += generateTree(cursor, false, options, level, atTail);
+        let tailContent = generateTree(cursor, false, options, level, atTail);
+        if (tailContent.startsWith("\n")) {
+          child += "$";
+          child += tailContent;
+        } else {
+          child += "$ ";
+          child += tailContent;
+        }
       }
     } else if (idx === 0 && insistHead) {
       child += generateInlineExpr(cursor);
@@ -176,11 +172,8 @@ function generateTree(
         child += generateLeaf(cursor);
       }
     } else if (kind === WriterNodeKind.writerKindSimpleExpr) {
-      if (prevKind === WriterNodeKind.writerKindLeaf && (idx === 1 || level > baseLevel || xs.length - idx <= 2)) {
+      if (prevKind === WriterNodeKind.writerKindLeaf) {
         child += generateInlineExpr(cursor);
-      } else if (prevKind === WriterNodeKind.writerKindLeaf) {
-        child += renderNewline(nextLevel);
-        child += generateTree(cursor, childInsistHead, options, nextLevel, false);
       } else if (options.useInline && prevKind === WriterNodeKind.writerKindSimpleExpr) {
         child += " ";
         child += generateInlineExpr(cursor);
@@ -198,7 +191,10 @@ function generateTree(
       }
     } else if (kind === WriterNodeKind.writerKindBoxedExpr) {
       let content = generateTree(cursor, childInsistHead, options, nextLevel, false);
-      if (
+      if (childInsistHead) {
+        child += renderNewline(nextLevel);
+        child += content;
+      } else if (
         prevKind === WriterNodeKind.writerKindNil ||
         prevKind === WriterNodeKind.writerKindLeaf ||
         prevKind === WriterNodeKind.writerKindSimpleExpr
@@ -222,7 +218,7 @@ function generateTree(
     } else if (prevKind === WriterNodeKind.writerKindLeaf && kind === WriterNodeKind.writerKindLeaf) {
       result += " ";
       result += child;
-    } else if (prevKind === WriterNodeKind.writerKindLeaf && kind === WriterNodeKind.writerKindSimpleExpr && !child.startsWith("\n")) {
+    } else if (prevKind === WriterNodeKind.writerKindLeaf && kind === WriterNodeKind.writerKindSimpleExpr) {
       result += " ";
       result += child;
     } else if (prevKind === WriterNodeKind.writerKindSimpleExpr && kind === WriterNodeKind.writerKindLeaf) {
