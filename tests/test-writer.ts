@@ -22,6 +22,8 @@ let caseNames = [
   "cond",
   "cond-short",
   "list-match",
+  "let",
+  "match",
 ];
 
 let inlineCaseNames = ["html-inline", "inline-mode"];
